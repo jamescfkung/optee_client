@@ -275,6 +275,19 @@ static void process_fs(int fd, struct tee_rpc_invoke *inv)
 	OUTMSG();
 }
 
+static void *memcpy_unalign(void *to, const void *from, size_t size)
+{
+	size_t i;
+	char *dst = (char *)to;
+	const char *src = (char *)from;
+
+	for (i = 0; i < size; i++) {
+		dst[i] = src[i];
+	}
+
+	return to;
+}
+
 static void load_ta(int fd, struct tee_rpc_invoke *inv)
 {
 	void *ta = NULL;
@@ -303,7 +316,7 @@ static void load_ta(int fd, struct tee_rpc_invoke *inv)
 		} else {
 			inv->res = TEEC_SUCCESS;
 
-			memcpy(ta_shm->buffer, ta, size);
+			memcpy_unalign(ta_shm->buffer, ta, size);
 
 			/* Fd will come back from TEE for unload. */
 			cmd->supp_ta_handle = ta_shm->d.fd;
